@@ -7,9 +7,13 @@
 
 import UIKit
 import CryptoKit
+import CoreData
+
 
 class SignUpViewController: UIViewController {
-
+    
+   
+//MARK: - Outlets
     
     @IBOutlet weak var errorLabel: UILabel!
     
@@ -33,16 +37,29 @@ class SignUpViewController: UIViewController {
     
     
     @IBOutlet weak var createAccountButton: UIButton!
+  
     
+//MARK: - LifeCycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
 
         setupUI()
         setupDelegates()
         errorLabelUI()
+        self.hideKeyboardWhenTappedAround()
         // Do any additional setup after loading the view.
     }
     
+    //MARK: - Delegate Methods
+        
+        private func setupDelegates() {
+            [nameTextField, mobileTextField, emailTextField, passwordTextField,reEnterPasswordTextField].forEach { textField in
+                textField.delegate = self
+            }
+        }
+        
+    
+//MARK: - UI Opertaions
     func errorLabelUI(){
         errorLabel.text = ""
         errorLabel.textColor = .red
@@ -110,12 +127,25 @@ class SignUpViewController: UIViewController {
     }
     
     
-    private func setupDelegates() {
-        [nameTextField, mobileTextField, emailTextField, passwordTextField,reEnterPasswordTextField].forEach { textField in
-            textField.delegate = self
-        }
+    
+    // MARK: - UI Feedback
+    private func showError(_ message: String) {
+        errorLabel.text = message
+        errorLabel.isHidden = false
+    }
+
+    private func hideError() {
+        errorLabel.isHidden = true
     }
     
+    
+
+    @objc private func textFieldDidChange() {
+        hideError()
+    }
+    
+    
+
     private func setupKeyboardHandling() {
         NotificationCenter.default.addObserver(
             self,
@@ -131,6 +161,127 @@ class SignUpViewController: UIViewController {
         )
     }
     
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        guard let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+        
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
+        signUpScrollView.contentInset = contentInsets
+        signUpScrollView.scrollIndicatorInsets = contentInsets
+    }
+    
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        signUpScrollView.contentInset = .zero
+        signUpScrollView.scrollIndicatorInsets = .zero
+    }
+    
+
+ 
+    func performSignup(name: String, mobile: String, email: String, password: String) {
+        // Encrypt password before saving
+        let encryptedPassword = encryptPassword(password)
+
+        // Save user data with encrypted password
+//        let userData = UserData(name: name, mobile: mobile, email: email, encryptedPassword: encryptedPassword)
+    //MARK: - Saving Core Data Email
+        
+        savingEmailCoreData(email: email)
+        
+        print("Signup successful for: \(name)")
+    }
+    
+
+
+    func encryptPassword(_ password: String) -> String {
+        // Using SHA256 for password encryption (in production, use bcrypt or similar)
+        let inputData = Data(password.utf8)
+        let hashed = SHA256.hash(data: inputData)
+        return hashed.compactMap { String(format: "%02x", $0) }.joined()
+    }
+
+
+    // MARK: - User Creation
+    private func createUser(name: String, mobile: String, email: String, password: String) {
+        // Show loading state
+        createAccountButton.setTitle("Creating Account...", for: .normal)
+        createAccountButton.setTitleColor(.white, for: .normal)
+        createAccountButton.isEnabled = false
+        
+        // Simulate network request delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.createAccountButton.setTitle("Create Account", for: .normal)
+            self?.createAccountButton.isEnabled = true
+            
+            // Save encrypted password to Keychain
+            let success = KeychainService.savePassword(password, for: email,and: mobile)
+            
+            if success {
+                // In a real app, you'd also save user data to your backend/local storage
+                self?.showSuccess("Account created successfully!") {
+                    self?.navigationController?.popViewController(animated: true)
+                }
+            } else {
+                self?.showError("Failed to create account. Please try again.")
+            }
+        }
+        
+    }
+
+    func createsAccount(){
+        let name = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let mobile = mobileTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let password = passwordTextField.text ?? ""
+        
+        createUser(name: name, mobile: mobile, email: email, password: password)
+        performSignup(name: name, mobile: mobile, email: email, password: password)
+            
+        
+        
+    }
+    
+    
+    private func showSuccess(_ message: String, completion: (() -> Void)? = nil) {
+        let alert = UIAlertController(title: "Success", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            completion?()
+        })
+        present(alert, animated: true)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    
+}
+
+// MARK: - UITextFieldDelegate
+extension SignUpViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        switch textField {
+        case nameTextField:
+            mobileTextField.becomeFirstResponder()
+        case mobileTextField:
+            emailTextField.becomeFirstResponder()
+        case emailTextField:
+            passwordTextField.becomeFirstResponder()
+        case passwordTextField:
+            textField.resignFirstResponder()
+            if validateFields() {
+                createsAccount()
+            }
+        default:
+            textField.resignFirstResponder()
+        }
+        return true
+    }
+}
+
+//MARK: - extensionFor Validations
+
+extension SignUpViewController {
+    
+//MARK: - Validations
     
     private func validateFields() -> Bool {
         let name = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -260,169 +411,52 @@ class SignUpViewController: UIViewController {
             return uppercaseCount && digitCount && specialCount
         }
     
-    
-    
-    
-    
-    
-    
-    
 
-//MARK: - UIButton Actions
-    @IBAction func closeButton(_ sender: UIButton) {
-        navigationController?.popViewController(animated: true)
-    }
-    
-    @IBAction func passwordInfoTapped(_ sender: UIButton) {
-        
-        let alert = UIAlertController(title: "Password Requirements", message: "\n* Ensures the password is at least 8 characters and no more than 15 \n\n* Prevents the password from containing the provided username \n\n* Requires the first character to be UperCase \n\n* Contains one uppercase letters \n\n* Contains two Number \n\n* Contains one special character", preferredStyle: .alert)
-        let action = UIAlertAction(title: "OK", style: .default)
-        alert.addAction(action)
-        present(alert, animated: true)
-    }
-    
-   
-    //
-    //Requires the first character to be UperCase
-    //At least two uppercase letters
-    //At least two Number
-    //At least one special character
-    
-    
-    @IBAction func createAccountButtonTapped(_ sender: UIButton) {
-        guard validateFields() else { return }
-        
-        let name = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let mobile = mobileTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let password = passwordTextField.text ?? ""
-        
-        createUser(name: name, mobile: mobile, email: email, password: password)
-    }
-    
-    
-    @objc private func textFieldDidChange() {
-        hideError()
-    }
-    
-
-    
-    @objc private func keyboardWillShow(notification: NSNotification) {
-        guard let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
-        
-        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
-        signUpScrollView.contentInset = contentInsets
-        signUpScrollView.scrollIndicatorInsets = contentInsets
-    }
-    
-    @objc private func keyboardWillHide(notification: NSNotification) {
-        signUpScrollView.contentInset = .zero
-        signUpScrollView.scrollIndicatorInsets = .zero
-    }
-    
-    func performSignup(name: String, mobile: String, email: String, password: String) {
-        // Encrypt password before saving
-        let encryptedPassword = encryptPassword(password)
-
-        // Save user data with encrypted password
-        let userData = UserData(name: name, mobile: mobile, email: email, encryptedPassword: encryptedPassword)
-        saveUserData(userData)
-
-        print("Signup successful for: \(name)")
-    }
-
-    func encryptPassword(_ password: String) -> String {
-        // Using SHA256 for password encryption (in production, use bcrypt or similar)
-        let inputData = Data(password.utf8)
-        let hashed = SHA256.hash(data: inputData)
-        return hashed.compactMap { String(format: "%02x", $0) }.joined()
-    }
-
-    func saveUserData(_ userData: UserData) {
-        // Implement secure storage logic here (e.g., Core Data, Keychain)
-        print("Saving user data securely...")
-    }
-
-    
-
-    
-    // MARK: - User Creation
-    private func createUser(name: String, mobile: String, email: String, password: String) {
-        // Show loading state
-        createAccountButton.setTitle("Creating Account...", for: .normal)
-        createAccountButton.setTitleColor(.white, for: .normal)
-        createAccountButton.isEnabled = false
-        
-        // Simulate network request delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.createAccountButton.setTitle("Create Account", for: .normal)
-            self?.createAccountButton.isEnabled = true
-            
-            // Save encrypted password to Keychain
-            let success = KeychainService.savePassword(password, for: email)
-            
-            if success {
-                // In a real app, you'd also save user data to your backend/local storage
-                self?.showSuccess("Account created successfully!") {
-                    self?.navigationController?.popViewController(animated: true)
-                }
-            } else {
-                self?.showError("Failed to create account. Please try again.")
-            }
-        }
-    }
-
-
-    // MARK: - UI Feedback
-    private func showError(_ message: String) {
-        errorLabel.text = message
-        errorLabel.isHidden = false
-    }
-
-    private func hideError() {
-        errorLabel.isHidden = true
-    }
-    
-    
-    private func showSuccess(_ message: String, completion: (() -> Void)? = nil) {
-        let alert = UIAlertController(title: "Success", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            completion?()
-        })
-        present(alert, animated: true)
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
     
 }
+//MARK: - extension For Actions
 
-
-
-
-// MARK: - UITextFieldDelegate
-extension SignUpViewController: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        switch textField {
-        case nameTextField:
-            mobileTextField.becomeFirstResponder()
-        case mobileTextField:
-            emailTextField.becomeFirstResponder()
-        case emailTextField:
-            passwordTextField.becomeFirstResponder()
-        case passwordTextField:
-            textField.resignFirstResponder()
-            if validateFields() {
-//                signupButtonTapped()
-            }
-        default:
-            textField.resignFirstResponder()
+extension SignUpViewController {
+    
+    //MARK: - UIButton Actions
+        @IBAction func closeButton(_ sender: UIButton) {
+            navigationController?.popViewController(animated: true)
         }
-        return true
+        
+        @IBAction func passwordInfoTapped(_ sender: UIButton) {
+            
+            let alert = UIAlertController(title: "Password Requirements", message: "\n* Ensures the password is at least 8 characters and no more than 15 \n\n* Prevents the password from containing the provided username \n\n* Requires the first character to be UperCase \n\n* Contains one uppercase letters \n\n* Contains two Number \n\n* Contains one special character", preferredStyle: .alert)
+            let action = UIAlertAction(title: "OK", style: .default)
+            alert.addAction(action)
+            present(alert, animated: true)
+        }
+        
+       
+        //
+        //Requires the first character to be UperCase
+        //At least two uppercase letters
+        //At least two Number
+        //At least one special character
+        
+        
+        @IBAction func createAccountButtonTapped(_ sender: UIButton) {
+            guard validateFields() else { return }
+            
+            createsAccount()
+
+           
+        }
+        
+        
+}
+extension SignUpViewController {
+    
+    func savingEmailCoreData(email: String) {
+        
+        DatabaseHelper.shareInstance.saveUserEmailData(email: email)
+    
     }
 }
-
 
     
 

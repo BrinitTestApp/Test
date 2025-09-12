@@ -12,7 +12,7 @@ class KeychainService {
     
     // MARK: - Keychain Operations
     
-    static func savePassword(_ password: String, for identifier: String) -> Bool {
+    static func savePassword(_ password: String, for identifierEmail: String, and identifierMobile: String) -> Bool {
         guard let passwordData = password.data(using: .utf8) else {
             return false
         }
@@ -20,7 +20,7 @@ class KeychainService {
         // Create query
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: identifier,
+            kSecAttrAccount as String: identifierEmail,
             kSecValueData as String: passwordData,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         ]

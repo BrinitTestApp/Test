@@ -8,24 +8,44 @@
 import UIKit
 import Security
 
+
 class LoginTableViewController: UITableViewController {
     
-    @IBOutlet weak var errorLabel: UILabel!
+    //MARK: - Variables
     
+    var allEmailsDB = [UserEmails]()
+    var usermail: UserEmails?
+    
+    var saveEmailTemp = "" // Database Conflict
+    //MARK: - Outlets
+    
+    @IBOutlet weak var errorLabel: UILabel!
     @IBOutlet weak var mobileEmailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var loginButton: UIButton!
     @IBOutlet weak var signUpButton: UIButton!
     
     
+//MARK: - Life Cycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupDelegates()
         // Do any additional setup after loading the view.
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        self.hideKeyboardWhenTappedAround()
+        
+      
     }
     
+//MARK: - Delegates
     
+    private func setupDelegates() {
+        mobileEmailTextField.delegate = self
+        passwordTextField.delegate = self
+    }
+    
+//MARK: - UI StoryBoards
     func setupUI() {
         // Email/Mobile TextField
         mobileEmailTextField.placeholder = "Email or Mobile Number"
@@ -62,14 +82,15 @@ class LoginTableViewController: UITableViewController {
     }
     
     
-    private func setupDelegates() {
-        mobileEmailTextField.delegate = self
-        passwordTextField.delegate = self
-    }
     
     @objc private func textFieldDidChange() {
        hideError()
    }
+    
+    private func hideError() {
+        errorLabel.isHidden = true
+    }
+    
     // MARK: - Validation
     private func validateFields() -> Bool {
         let email = mobileEmailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -94,22 +115,6 @@ class LoginTableViewController: UITableViewController {
     }
     
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-    
-//MARK: - Button Actions
-    @IBAction func loginTapped(_ sender: Any) {
-        loginButtonTapped()
-    }
-    
-    @IBAction func signUpTapped(_ sender: UIButton) {
-        
-        guard let vc =  storyboard?.instantiateViewController(withIdentifier: "SignUpViewController") as? SignUpViewController else { return}
-        navigationController?.pushViewController(vc, animated: true)
-
-    }
-    
     private func loginButtonTapped() {
         guard validateFields() else { return }
         
@@ -120,7 +125,7 @@ class LoginTableViewController: UITableViewController {
         // i'll check against stored keychain data
 
         authenticateUser(email: email, password: password)
-    
+        
         
     }
 
@@ -153,6 +158,7 @@ class LoginTableViewController: UITableViewController {
             if self?.verifyStoredCredentials(email: email, password: password) == true {
                 self?.showSuccess("Login successful!")
                 // Navigate to main app
+
                 
             } else {
                 self?.showError("Invalid email or password")
@@ -160,14 +166,18 @@ class LoginTableViewController: UITableViewController {
         }
     }
     
-    private func verifyStoredCredentials(email: String, password: String) -> Bool {
+    private func verifyStoredCredentials(email: String,password: String) -> Bool {
+        
         // Retrieve stored password from Keychain
         if let storedPassword = KeychainService.loadPassword(for: email) {
             // In a real app, you'd use proper password hashing/verification
             return password == storedPassword
+            
+           
         }
         return false
     }
+
     
     // MARK: - UI Feedback
     private func showError(_ message: String) {
@@ -184,24 +194,71 @@ class LoginTableViewController: UITableViewController {
         errorLabel.layer.add(animation, forKey: "position")
     }
     
-    private func hideError() {
-        errorLabel.isHidden = true
-    }
+
     
     private func showSuccess(_ message: String) {
         let alert = UIAlertController(title: "Success", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default){_ in
-            self.mobileEmailTextField.text = ""
-            self.passwordTextField.text = ""
-            if let vc = self.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController {
+          
+            
+            if let vc =
+                
+                self.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController {
+                if self.saveEmailTemp == "" {
+                    self.saveEmailTemp = self.mobileEmailTextField.text!
+                    vc.fetchEmail = self.saveEmailTemp
+                    self.getUser()
+                    vc.user = self.usermail
+                //TODO: '''''' Error Doing Parent Email after Signin '''''
+                //FIXME: - Working ...!
+                   
+                }
+                self.mobileEmailTextField.text = ""
+                self.passwordTextField.text = ""
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         })
         present(alert, animated: true)
     }
-  
+    
+    func getUser(){
+        allEmailsDB = DatabaseHelper.shareInstance.fetchingEmailData()
+        
+        for gettingEmail in allEmailsDB{
+            if gettingEmail.email == saveEmailTemp{
+                print("\(saveEmailTemp)")
+                
+                usermail = gettingEmail
+            }
+            else {
+                print("Error Loggedin User....!!! find From CoreData...!!!")
+                return
+            }
+        }
+        
+     }
+
+
+    
 }
 
+
+//MARK: - Actions Buttons
+extension LoginTableViewController {
+    
+    //MARK: - Button Actions
+        @IBAction func loginTapped(_ sender: Any) {
+            loginButtonTapped()
+        }
+        
+        @IBAction func signUpTapped(_ sender: UIButton) {
+            
+            guard let vc =  storyboard?.instantiateViewController(withIdentifier: "SignUpViewController") as? SignUpViewController else { return}
+            navigationController?.pushViewController(vc, animated: true)
+
+        }
+    
+}
 
 // MARK: - UITextFieldDelegate
 extension LoginTableViewController: UITextFieldDelegate {

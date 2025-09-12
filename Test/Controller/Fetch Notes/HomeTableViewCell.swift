@@ -7,13 +7,24 @@
 
 import UIKit
 
-class NoteTableViewCell: UITableViewCell {
+
+
+class HomeTableViewCell: UITableViewCell {
+    
+    var noteRow: NoteDetails?{
+        didSet {
+            titleLabel.text = noteRow?.noteTitle
+            descLabel.text = noteRow?.noteDescription
+            noteImage.image = UIImage(data: (noteRow?.noteImage)!)
+        }
+    }
     
     @IBOutlet weak var titleLabel: UILabel!
     
+    @IBOutlet weak var descLabel: UILabel!
+    
     @IBOutlet weak var noteImage: UIImageView!
     
-    @IBOutlet weak var descLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
