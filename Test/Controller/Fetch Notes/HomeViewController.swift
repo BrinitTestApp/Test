@@ -9,21 +9,13 @@ import UIKit
 
 
 
-class HomeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource, emailDelegate {
+class HomeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     
     
     var notes = [NoteDetails]()
     var user : UserEmails?
     var photoUser: NotePhotoes?
-    var fetchEmail: String?
     
-//    var selectedEmailuser: UserEmails?{
-//        didSet{
-//            fetchingUserDetails()
-//            noteTableView.reloadData()
-//        }
-//    }
-
 
 
 
@@ -39,10 +31,6 @@ class HomeViewController: UIViewController,UITableViewDelegate,UITableViewDataSo
 //        self.notes = DatabaseHelper.shareInstance.fetchingNote()
 
        
-    }
-    
-    func getEmail(email: UserEmails) {
-        user = email
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -97,11 +85,9 @@ class HomeViewController: UIViewController,UITableViewDelegate,UITableViewDataSo
     @IBAction func addButtonTapped(_ sender: UIBarButtonItem) {
         
         if let vc = storyboard?.instantiateViewController(withIdentifier: "AddNoteViewController") as? AddNoteViewController{
-            vc.getEmailUser = fetchEmail
+            vc.getEmailUser = user
             navigationController?.pushViewController(vc, animated: true)
         }
     }
-    
-    
-    
+ 
 }

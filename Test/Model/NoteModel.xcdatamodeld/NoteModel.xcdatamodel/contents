@@ -2,13 +2,13 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="NoteDetails" representedClassName=".NoteDetails" syncable="YES" codeGenerationType="class">
         <attribute name="noteDescription" attributeType="String"/>
-        <attribute name="noteImage" attributeType="Binary"/>
+        <attribute name="noteImage" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="noteTitle" attributeType="String"/>
         <relationship name="allPhotes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NotePhotoes" inverseName="parentAllNotes" inverseEntity="NotePhotoes"/>
         <relationship name="parentEmail" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEmails" inverseName="noteAccess" inverseEntity="UserEmails"/>
     </entity>
     <entity name="NotePhotoes" representedClassName=".NotePhotoes" syncable="YES" codeGenerationType="class">
-        <attribute name="noteAllImages" attributeType="Binary"/>
+        <attribute name="noteAllImages" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="parentAllNotes" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="NoteDetails" inverseName="allPhotes" inverseEntity="NoteDetails"/>
     </entity>
     <entity name="UserEmails" representedClassName=".UserEmails" syncable="YES" codeGenerationType="class">

@@ -12,7 +12,7 @@ import CoreData
 class AllPhotoesViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
     var allPhoto = [NotePhotoes]()
-    var noteData:NoteDetails?
+    var noteData: NoteDetails?
     
     //MARK:- IBOutlets
     @IBOutlet weak var allPhotoCollectioView: UICollectionView!
@@ -22,13 +22,17 @@ class AllPhotoesViewController: UIViewController, UICollectionViewDelegate, UICo
         super.viewDidLoad()
         allPhotoCollectioView.delegate = self
         allPhotoCollectioView.dataSource = self
-        self.allPhoto = DatabaseHelper.shareInstance.fetchingAllImages()
+//        self.allPhoto = DatabaseHelper.shareInstance.fetchingAllImages()
 
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        if noteData?.allPhotes?.allObjects != nil {
+            allPhoto = noteData?.allPhotes?.allObjects as! [NotePhotoes]
+        }
         allPhotoCollectioView.reloadData()
     }
+
     enum ScreenSize: Int {
         case WIDTH
         case HEIGHT
