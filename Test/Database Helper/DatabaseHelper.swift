@@ -91,7 +91,7 @@ class DatabaseHelper: NSObject {
         return arrayOfAllImages
     }
     //Save
-    func saveImage(image: [UIImage]) {
+    func saveImage(image: [UIImage], note: NoteDetails) {
 
         
         for singleImage in image {
@@ -99,6 +99,7 @@ class DatabaseHelper: NSObject {
             
             let imageData = singleImage.jpegData(compressionQuality: 1)
             allImageSaving.noteAllImages = imageData
+            allImageSaving.parentAllNotes = note
         }
             do {
                 try context.save()

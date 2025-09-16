@@ -8,23 +8,19 @@
 import UIKit
 import PhotosUI
 
-protocol emailDelegate {
-    func getEmail(email: UserEmails)
-}
-
 class AddNoteViewController: UITableViewController,UITextViewDelegate {
     
     //MARK: - Costume DelegateMethods
-    var emailDelegateMethod: emailDelegate?
     
     //MARK: - Variables
     
     var selectedTitle: String?
     var selectedNote: String?
     var selectedImage: [UIImage] = []
-    var user : UserEmails?
+    var userNote: NoteDetails?
+    var allNotes = [NoteDetails]()
     var allUser = [UserEmails]()
-    var getEmailUser: String?
+    var getEmailUser: UserEmails?
     //fetching email from loging page (not core data )
 
     //MARK: - Outlets
@@ -44,28 +40,10 @@ class AddNoteViewController: UITableViewController,UITextViewDelegate {
         setupUI()
         addNoteTextField.delegate = self
         self.hideKeyboardWhenTappedAround()
-        getUser()
         // Do any additional setup after loading the view.
     }
-    override func viewWillAppear(_ animated: Bool) {
-        getUser()
-    }
-   func getUser(){
-       allUser = DatabaseHelper.shareInstance.fetchingEmailData()
-       
-       for gettingEmail in allUser{
-           if gettingEmail.email == getEmailUser{
-               print("\(getEmailUser)")
-               
-               user = gettingEmail
-           }
-           else {
-               print("Error Loggedin User....!!! find From CoreData...!!!")
-               return
-           }
-       }
-       
-    }
+
+   
     func setupUI() {
         //imageView
         
@@ -209,8 +187,12 @@ class AddNoteViewController: UITableViewController,UITextViewDelegate {
             present(alert, animated: true)
             return
         }
-        
-        addingImagestoCoreData(image: selectedImage)
+        allNotes = DatabaseHelper.shareInstance.fetchingNote()
+        userNote = allNotes.last
+        guard let activeUser = userNote else{
+            print("Error Loggedin Notes....!!!  note not find From CoreData...!!!")
+            return}
+        addingImagestoCoreData(image: selectedImage, note: activeUser)
     }
     
     
@@ -241,7 +223,6 @@ extension AddNoteViewController {
     @IBAction func addNoteTapped(_ sender: UIButton) {
         addingImageData()
         addingData()
-        emailDelegateMethod?.getEmail(email: user!)
         navigationController?.popViewController(animated: true)
     }
 
@@ -348,15 +329,19 @@ extension AddNoteViewController: PHPickerViewControllerDelegate, UIImagePickerCo
 extension AddNoteViewController {
     
     func addingNotes(note: String, dec: String, photo: UIImage){
-        guard let activeUser = user else{
+        guard let activeUser = getEmailUser else{
             print("Error Loggedin Notes....!!!  Email not find From CoreData...!!!")
             return}
         DatabaseHelper.shareInstance.saveNote(note: note, description: dec, photo: photo, email: activeUser)
         
     }
     
-    func addingImagestoCoreData(image: [UIImage]){
-        DatabaseHelper.shareInstance.saveImage(image: image)
+    func addingImagestoCoreData(image: [UIImage], note: NoteDetails){
+        guard let activeNote = userNote else{
+            print("Error Loggedin Notes....!!!  Email not find From CoreData...!!!")
+            return}
+
+        DatabaseHelper.shareInstance.saveImage(image: image, note: activeNote)
     }
     
 }

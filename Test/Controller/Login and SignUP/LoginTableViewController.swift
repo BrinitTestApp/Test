@@ -16,7 +16,6 @@ class LoginTableViewController: UITableViewController {
     var allEmailsDB = [UserEmails]()
     var usermail: UserEmails?
     
-    var saveEmailTemp = "" // Database Conflict
     //MARK: - Outlets
     
     @IBOutlet weak var errorLabel: UILabel!
@@ -204,18 +203,11 @@ class LoginTableViewController: UITableViewController {
             if let vc =
                 
                 self.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController {
-                if self.saveEmailTemp == "" {
-                    self.saveEmailTemp = self.mobileEmailTextField.text!
-                    vc.fetchEmail = self.saveEmailTemp
                     self.getUser()
                     vc.user = self.usermail
-                //TODO: '''''' Error Doing Parent Email after Signin '''''
-                //FIXME: - Working ...!
-                   
-                }
-                self.mobileEmailTextField.text = ""
-                self.passwordTextField.text = ""
-                self.navigationController?.pushViewController(vc, animated: true)
+                    self.mobileEmailTextField.text = ""
+                    self.passwordTextField.text = ""
+                    self.navigationController?.pushViewController(vc, animated: true)
             }
         })
         present(alert, animated: true)
@@ -225,8 +217,8 @@ class LoginTableViewController: UITableViewController {
         allEmailsDB = DatabaseHelper.shareInstance.fetchingEmailData()
         
         for gettingEmail in allEmailsDB{
-            if gettingEmail.email == saveEmailTemp{
-                print("\(saveEmailTemp)")
+            if gettingEmail.email == mobileEmailTextField.text{
+                print("getting core data email is...!! \(mobileEmailTextField.text)")
                 
                 usermail = gettingEmail
             }

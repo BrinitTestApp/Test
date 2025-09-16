@@ -21,6 +21,8 @@ class AllPhotoesDetailsViewController: UIViewController {
     
     
     override func viewDidLoad() {
+        
+        
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
@@ -34,6 +36,8 @@ class AllPhotoesDetailsViewController: UIViewController {
         imgView.image = UIImage(data: (noteImageSet?.noteAllImages)!)
         lblName.text = noteDataSet?.noteTitle
         lblDesc.text = noteDataSet?.noteDescription
+        
+        
     }
     
     @IBAction func btnCloseAction(_ sender: UIButton) {
