@@ -185,6 +185,18 @@ class AddNoteViewController: UITableViewController,UITextViewDelegate {
         }
             addingNotes(note: selectedTitle, dec: selectedNote , photo: selectedImage[0])
 
+     
+     
+
+    }
+    func addingImageData(){
+        
+        guard !selectedImage.isEmpty else {
+            let alert = UIAlertController(title: "Oops!", message: "please select image", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
         allNotes = DatabaseHelper.shareInstance.fetchingNote()
         userNote = allNotes.last
         guard let activeUser = userNote else{
