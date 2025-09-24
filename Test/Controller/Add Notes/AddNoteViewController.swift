@@ -233,6 +233,7 @@ extension AddNoteViewController {
     @IBAction func addNoteTapped(_ sender: UIButton) {
         addingData()
         addingDatatoDB()
+        addingImageData()
         navigationController?.popViewController(animated: true)
     }
 
@@ -340,7 +341,7 @@ extension AddNoteViewController {
     
     func addingNotes(note: String, dec: String, photo: UIImage){
         guard let activeUser = getEmailUser else{
-            print("Error Loggedin Notes....!!!  Email not find From CoreData...!!!")
+            print("Error Loggedin Notes....!!!  Email not find From CoreData...(single Pic DB)!!!")
             return}
         DatabaseHelper.shareInstance.saveNote(note: note, description: dec, photo: photo, email: activeUser)
         
@@ -348,7 +349,7 @@ extension AddNoteViewController {
     
     func addingImagestoCoreData(image: [UIImage], note: NoteDetails){
         guard let activeNote = userNote else{
-            print("Error Loggedin Notes....!!!  Email not find From CoreData...!!!")
+            print("Error Loggedin Notes....!!!  Email not find From CoreData...!!!(multiple Pic DB)!!!")
             return}
 
         DatabaseHelper.shareInstance.saveImage(image: image, note: activeNote)

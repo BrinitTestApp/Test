@@ -221,12 +221,14 @@ class LoginTableViewController: UITableViewController {
                 print("getting core data email is...!! \(mobileEmailTextField.text)")
                 
                 usermail = gettingEmail
+                return
             }
             else {
                 print("Error Loggedin User....!!! find From CoreData...!!!")
-                return
             }
+
         }
+        
         
      }
 

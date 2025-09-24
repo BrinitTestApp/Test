@@ -81,7 +81,7 @@ class AllPhotoesViewController: UIViewController, UICollectionViewDelegate, UICo
 //MARK:- UICollectionViewFlowLayoutDelegate
 extension AllPhotoesViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let widthHeight = ScreenSize.WIDTH.cellHeightWidth(by: 2, noOfItems: 2, sideSpacing: 2)
+        let widthHeight = ScreenSize.WIDTH.cellHeightWidth(by: 2, noOfItems: 3, sideSpacing: 2)
         return CGSize.init(width: widthHeight, height: widthHeight)
     }
     
